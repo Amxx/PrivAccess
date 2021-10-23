@@ -3,9 +3,9 @@ import cors              from 'cors';
 import body_parser       from 'body-parser';
 import debug             from 'debug';
 import { ethers        } from 'ethers';
-import { verify, utils } from '@privacess/lib';
+import { verify, utils } from '@privaccess/lib';
 
-const DEBUG = debug('privacess')
+const DEBUG = debug('privaccess')
 
 const app = express();
 app.use(cors({ origin: '*' }));

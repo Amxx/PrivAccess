@@ -1,5 +1,5 @@
 {
-  "name": "@privacess/example-cli",
+  "name": "@privaccess/example-cli",
   "version": "0.0.1",
   "license": "MIT",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@privacess/lib": "^0.0.1",
+    "@privaccess/lib": "^0.0.1",
     "dotenv": "^10.0.0",
     "ethers": "^5.5.1"
   },

@@ -1,6 +1,6 @@
 const http = require('http')
 
-import { sign, utils } from '@privacess/lib';
+import { sign, utils } from '@privaccess/lib';
 
 const personal = "0x3b666dae2ffd82187a7c8a1f3d672cd21abfe697ae8349042974545c63809797";
 const pubs     = [

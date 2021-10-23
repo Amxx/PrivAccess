@@ -1,6 +1,6 @@
 import yargs           from 'yargs/yargs';
 import { ethers      } from 'ethers';
-import { sign, utils } from '@privacess/lib';
+import { sign, utils } from '@privaccess/lib';
 
 const revert = (msg = "error") => { throw new Error(msg); }
 
