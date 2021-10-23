@@ -11,6 +11,7 @@ export function sign(message: Bytes | string, personal: KeyPairish, external: Ke
 
     // signer curve
     const signer = utils.keyFromPrivateOrSigner(personal);
+
     // ring curves (must include signer + uniqueness + shuffle)
     const ring = [].concat(
         signer,

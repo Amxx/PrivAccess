@@ -1,5 +1,5 @@
 {
-  "name": "@amxx/privacess",
+  "name": "@privacess/monorepo",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/**/*"
     ]
   }
 }

@@ -1,5 +1,6 @@
-const { assert } = require('chai')
-const { sign, verify, utils } = require('../dist');
+const http = require('http')
+
+import { sign, utils } from '@privacess/lib';
 
 const personal = "0x358be44145ad16a1add8622786bef07e0b00391e072855a5667eb3c78b9d3803";
 const pubs     = [
@@ -14,37 +15,41 @@ const pubs     = [
     "0x049655feed4d214c261e0a6b554395596f1f1476a77d999560e5a8df9b8a1a3515217e88dd05e938efdd71b2cce322bf01da96cd42087b236e8f5043157a9c0683",
 ];
 
-describe ('verify signature', () => {
-    beforeEach (async () => {
-        this.sig = sign("hello world", personal, pubs);
+function query({
+    hostname,
+    port,
+    path,
+    method,
+    headers = { 'Content-Type': 'application/json' },
+    data
+}) {
+    return new Promise((resolve, reject) => {
+        const chunks = []
+        const req = http.request(
+            { hostname, port, path, method, headers },
+            res => {
+                res.on('data', d => { chunks.push(d); });
+                res.on('end', () => { resolve(chunks.join('')); });
+            },
+        );
+        req.on('error', reject);
+        req.write(JSON.stringify(data))
+        req.end()
     });
+}
 
-    it ('accept valid signature', async () => {
-        assert.isTrue(verify("hello world", this.sig));
-    });
+query({
+    method:   'POST',
+    hostname: 'localhost',
+    port:     3000,
+    path:     '/secure',
+    data:     { sig: utils.serialize(sign("message", personal, pubs)) },
+}).then(console.log);
 
-    it ('reject valid signature', async () => {
-        assert.isFalse(verify("not hello world", this.sig));
-    });
-
-    describe ('serialize/decerialize', () => {
-        beforeEach (async () => {
-            this.serialized   = utils.serialize(this.sig);
-            this.deserialized = utils.deserialize(this.serialized);
-        });
-
-        it ('accept valid signature', async () => {
-            assert.isTrue(verify("hello world", this.deserialized));
-        });
-
-        it ('reject valid signature', async () => {
-            assert.isFalse(verify("not hello world", this.deserialized));
-        });
-    });
-})
-
-// const addresses = deserialized.ring
-//     .map(keyish => utils.keyFromPublicOrSigner(keyish))
-//     .map(utils.getAddress);
-
-// console.log(addresses)
+query({
+    method:   'POST',
+    hostname: 'localhost',
+    port:     3000,
+    path:     '/secure',
+    data:     { sig: utils.serialize(sign("wrong message", personal, pubs)) },
+}).then(console.log);

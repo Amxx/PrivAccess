@@ -18,10 +18,10 @@ export function getCurve() {
 export function keyFromPublicOrSigner(input: KeyPairish): KeyPair {
     if (typeof input === 'string') {
         return getCurve().keyFromPublic(input.replace(/^0x/, ""), "hex");
-    } else if (input instanceof Wallet) {
-        return input._signingKey().curve;
     } else if (input instanceof SigningKey) {
-        return input.curve;
+        return keyFromPublicOrSigner(input.publicKey);
+    } else if (input instanceof Wallet) {
+        return keyFromPublicOrSigner(input._signingKey());
     } else if (input instanceof ec.KeyPair) {
         return input
     } else {
@@ -32,10 +32,10 @@ export function keyFromPublicOrSigner(input: KeyPairish): KeyPair {
 export function keyFromPrivateOrSigner(input: KeyPairish): KeyPair {
     if (typeof input === 'string') {
         return getCurve().keyFromPrivate(input.replace(/^0x/, ""), "hex");
-    } else if (input instanceof Wallet) {
-        return input._signingKey().curve;
     } else if (input instanceof SigningKey) {
-        return input.curve;
+        return keyFromPrivateOrSigner(input.privateKey);
+    } else if (input instanceof Wallet) {
+        return keyFromPrivateOrSigner(input._signingKey());
     } else if (input instanceof ec.KeyPair) {
         return input
     } else {
@@ -68,9 +68,13 @@ export function serialize(sign) {
 }
 
 export function deserialize(data) {
-    const sign = JSON.parse(Buffer.from(data, 'base64').toString());
-    sign.image = getCurve().g.curve.point(...sign.image);
-    return sign;
+    try {
+        const sign = JSON.parse(Buffer.from(data, 'base64').toString());
+        sign.image = getCurve().g.curve.point(...sign.image);
+        return sign;
+    } catch {
+        throw new Error("invalid serialized signature");
+    }
 }
 
 export function getAddress(key: KeyPair) {
