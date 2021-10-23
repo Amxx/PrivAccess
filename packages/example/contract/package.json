@@ -1,0 +1,16 @@
+{
+  "name": "@privacess/example-contract",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "prepublish": "rimraf artifacts build cache generated",
+    "prepare": "copyfiles -f ../../../node_modules/@amxx/hre/hardhat.config.js .",
+    "prepack": "scripts/prepack.sh",
+    "compile": "hardhat compile",
+    "test": "hardhat test"
+  },
+  "dependencies": {
+    "@amxx/hre": "file:amxx-hre-v0.0.4.tgz",
+    "copyfiles": "^2.4.1"
+  }
+}

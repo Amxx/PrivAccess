@@ -2,7 +2,7 @@ import { BigNumber            } from "@ethersproject/bignumber";
 import { Bytes, arrayify      } from "@ethersproject/bytes";
 import { hashMessage          } from "@ethersproject/hash";
 import { keccak256            } from "@ethersproject/keccak256";
-import { randomBytes          } from "@ethersproject/random";
+import { randomBytes,shuffled } from "@ethersproject/random";
 import { RingSign, KeyPairish } from './types';
 import * as utils               from './utils';
 
@@ -13,12 +13,10 @@ export function sign(message: Bytes | string, personal: KeyPairish, external: Ke
     const signer = utils.keyFromPrivateOrSigner(personal);
 
     // ring curves (must include signer + uniqueness + shuffle)
-    const ring = [].concat(
+    const ring = shuffled([].concat(
         signer,
         external.map(utils.keyFromPublicOrSigner)
-    )
-    .filter((key, i, array) => array.findIndex(k => k.getPublic("hex") === key.getPublic("hex")) == i)
-    .sort(() => .5 - Math.random())
+    ).filter((key, i, array) => array.findIndex(k => k.getPublic("hex") === key.getPublic("hex")) == i))
 
     if (ring.length < 2) {
         throw new Error("size less than two does not make sense");
