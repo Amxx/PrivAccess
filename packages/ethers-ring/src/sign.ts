@@ -10,11 +10,11 @@ export function sign(message: Bytes | string, personal: KeyPairish, external: Ke
     const digest = arrayify(hashMessage(message));
 
     // signer curve
-    const signer = utils.toPrivate(personal);
+    const signer = utils.keyFromPrivateOrSigner(personal);
     // ring curves (must include signer + uniqueness + shuffle)
     const ring = [].concat(
         signer,
-        external.map(utils.toPublic)
+        external.map(utils.keyFromPublicOrSigner)
     )
     .filter((key, i, array) => array.findIndex(k => k.getPublic("hex") === key.getPublic("hex")) == i)
     .sort(() => .5 - Math.random())
@@ -59,7 +59,7 @@ export function sign(message: Bytes | string, personal: KeyPairish, external: Ke
 
     return {
         image,
-        ring:   ring.map(x => x.getPublic("hex")),
+        ring:   ring.map(x => '0x' + x.getPublic("hex")),
         value:  C[0],
         values: S,
     };

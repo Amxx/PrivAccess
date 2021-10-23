@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha test/**/*.test.js"
+  },
+  "dependencies": {
+    "@ethersproject/bignumber": "^5.5.0",
+    "@ethersproject/bytes": "^5.5.0",
+    "@ethersproject/hash": "^5.5.0",
+    "@ethersproject/keccak256": "^5.5.0",
+    "@ethersproject/random": "^5.5.0",
+    "@ethersproject/signing-key": "^5.5.0",
+    "@ethersproject/wallet": "^5.5.0",
+    "elliptic": "^6.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.4",
+    "chai": "^4.3.4",
+    "mocha": "^9.1.3"
+  }
+}

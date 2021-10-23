@@ -1,20 +1,21 @@
 import { BigNumber           } from "@ethersproject/bignumber";
 import { keccak256           } from "@ethersproject/keccak256";
 import { SigningKey          } from '@ethersproject/signing-key';
+import { computeAddress      } from '@ethersproject/transactions';
 import { Wallet              } from '@ethersproject/wallet';
 import { ec                  } from 'elliptic';
 import { KeyPair, KeyPairish } from './types';
 
 let _curve: ec = null
 
-function getCurve() {
+export function getCurve() {
     if (!_curve) {
         _curve = new ec("secp256k1");
     }
     return _curve;
 }
 
-export function toPublic(input: KeyPairish): KeyPair {
+export function keyFromPublicOrSigner(input: KeyPairish): KeyPair {
     if (typeof input === 'string') {
         return getCurve().keyFromPublic(input.replace(/^0x/, ""), "hex");
     } else if (input instanceof Wallet) {
@@ -28,7 +29,7 @@ export function toPublic(input: KeyPairish): KeyPair {
     }
 }
 
-export function toPrivate(input: KeyPairish): KeyPair {
+export function keyFromPrivateOrSigner(input: KeyPairish): KeyPair {
     if (typeof input === 'string') {
         return getCurve().keyFromPrivate(input.replace(/^0x/, ""), "hex");
     } else if (input instanceof Wallet) {
@@ -58,16 +59,20 @@ export function getKeyImage(keyPair: KeyPair) {
 }
 
 export function serialize(sign) {
-    return JSON.stringify({
-        ring:   sign.ring.map(key => typeof key === 'string' ? key : toPublic(key).getPublic('hex')),
+    return Buffer.from(JSON.stringify({
+        ring:   sign.ring.map(key => typeof key === 'string' ? key : keyFromPublicOrSigner(key).getPublic('hex')),
         image:  sign.image.toJSON(),
         value:  BigNumber.from(sign.value).toHexString(),
         values: sign.values.map(bn => BigNumber.from(bn).toHexString()),
-    })
+    })).toString('base64');
 }
 
 export function deserialize(data) {
-    const sign = JSON.parse(data);
+    const sign = JSON.parse(Buffer.from(data, 'base64').toString());
     sign.image = getCurve().g.curve.point(...sign.image);
     return sign;
+}
+
+export function getAddress(key: KeyPair) {
+    return computeAddress('0x' + key.getPublic('hex'));
 }

@@ -12,7 +12,7 @@ export function verify(
     const digest = arrayify(hashMessage(message));
     const C0     = BigNumber.from(sig.value);
 
-    return sig.ring.map(utils.toPublic).reduce((C_i, key, i) => {
+    return sig.ring.map(utils.keyFromPublicOrSigner).reduce((C_i, key, i) => {
         const S_i = BigNumber.from(sig.values[i]);
 
         const c_i = C_i.toHexString().replace(/^0x/, '');

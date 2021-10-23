@@ -1,5 +1,4 @@
 const { assert } = require('chai')
-
 const { sign, verify, utils } = require('../dist');
 
 const personal = "0x358be44145ad16a1add8622786bef07e0b00391e072855a5667eb3c78b9d3803";
@@ -15,13 +14,37 @@ const pubs     = [
     "0x049655feed4d214c261e0a6b554395596f1f1476a77d999560e5a8df9b8a1a3515217e88dd05e938efdd71b2cce322bf01da96cd42087b236e8f5043157a9c0683",
 ];
 
-const sig = sign("hello world", personal, pubs);
+describe ('verify signature', () => {
+    beforeEach (async () => {
+        this.sig = sign("hello world", personal, pubs);
+    });
 
-assert.isTrue(verify("hello world", sig));
-assert.isFalse(verify("not hello world", sig));
+    it ('accept valid signature', async () => {
+        assert.isTrue(verify("hello world", this.sig));
+    });
 
-const serialized   = utils.serialize(sig);
-const deserialized = utils.deserialize(serialized);
+    it ('reject valid signature', async () => {
+        assert.isFalse(verify("not hello world", this.sig));
+    });
 
-assert.isTrue(verify("hello world", deserialized));
-assert.isFalse(verify("not hello world", deserialized));
+    describe ('serialize/decerialize', () => {
+        beforeEach (async () => {
+            this.serialized   = utils.serialize(this.sig);
+            this.deserialized = utils.deserialize(this.serialized);
+        });
+
+        it ('accept valid signature', async () => {
+            assert.isTrue(verify("hello world", this.deserialized));
+        });
+
+        it ('reject valid signature', async () => {
+            assert.isFalse(verify("not hello world", this.deserialized));
+        });
+    });
+})
+
+// const addresses = deserialized.ring
+//     .map(keyish => utils.keyFromPublicOrSigner(keyish))
+//     .map(utils.getAddress);
+
+// console.log(addresses)
