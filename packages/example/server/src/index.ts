@@ -1,4 +1,5 @@
 import express           from 'express';
+import cors              from 'cors';
 import body_parser       from 'body-parser';
 import debug             from 'debug';
 import { ethers        } from 'ethers';
@@ -7,6 +8,7 @@ import { verify, utils } from '@privacess/lib';
 const DEBUG = debug('privacess')
 
 const app = express();
+app.use(cors({ origin: '*' }));
 app.use(body_parser.json());
 app.use(body_parser.urlencoded({ extended: false }));
 
@@ -25,24 +27,28 @@ function runCheck(address) {
 
 app.post('/secure', async function (req, res) {
     try {
-        const message   = 'message';
+        const message   = 'connect';
         const sign      = utils.deserialize(req.body.sig);
         const addresses = sign.ring.map(keyish => utils.keyFromPublicOrSigner(keyish)).map(utils.getAddress);
         const valid     = await Promise.all(addresses.map(runCheck)).then(results => results.every(Boolean));
 
         if (!valid) {
+            DEBUG({ error: 'invalid ring entries' });
             res.send({ error: 'invalid ring entries' });
             return;
         }
 
         if (!verify(message, sign)) {
+            DEBUG({ error: 'invalid signature' });
             res.send({ error: 'invalid signature' });
             return;
         }
 
-        res.send('some secret you only get if you are authenticated');
+        DEBUG({ success: true });
+        res.send({ success: true, data: 'some secret you only get if you are authenticated' });
 
     } catch (error) {
+        DEBUG({ error: error.toString() });
         res.send({ error: error.toString() });
     }
 });
