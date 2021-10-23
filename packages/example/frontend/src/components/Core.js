@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Container, Card, Button, Form } from 'react-bootstrap';
+import { Container, Card, Modal, Button, Form } from 'react-bootstrap';
 
 import Loading from './Loading'
 
@@ -27,34 +27,41 @@ export default (props) => {
     setLoading(true);
   };
 
-  const handleReset = () => {
-    setResult(null)
-  }
-
-
   return (
     !!loading
     ? <Loading/>
-    : !!result?.data
-    ? JSON.stringify(result.data)
-    : <Container className='d-flex' style={{ 'minHeight': '100vh' }}>
-          <Card className='m-auto' style={{ 'minHeight': '30vh', 'minWidth': '30vw' }}>
-            <Card.Header className='text-center'>
-              Secure login
-            </Card.Header>
-            <Card.Body className='text-center'>
+    : <Container className='d-flex flex-column' style={{ 'minHeight': '100vh' }}>
+      <Card className='m-auto' style={{ 'minHeight': '30vh', 'minWidth': '30vw' }}>
+        <Card.Header className='text-center'>
+          Secure login
+        </Card.Header>
+        <Card.Body className='text-center'>
 
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Access token</Form.Label>
-                  <Form.Control as="textarea" name="token" rows={5} />
-                </Form.Group>
-                <Button variant="primary" type="submit">
-                  Connect
-                </Button>
-              </Form>
-            </Card.Body>
-          </Card>
-      </Container>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Access token</Form.Label>
+              <Form.Control as="textarea" name="token" rows={5} />
+            </Form.Group>
+            <Button variant="primary" type="submit">
+              Connect
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      <Modal
+        show={!!result}
+        onHide={() => setResult(null)}
+        backdrop="static"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Server responded</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          { result?.error ?? result?.data }
+        </Modal.Body>
+      </Modal>
+    </Container>
   );
 }

@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+		"launch": "DEBUG=privacess node -r dotenv/config dist/index.js"
   },
   "dependencies": {
     "@privacess/lib": "^0.0.1",

@@ -22,7 +22,10 @@ function runCheck(address) {
         ['function balanceOf(address) public view returns(uint256)'],
         ethers.getDefaultProvider(process.env.RPC),
     );
-    return contract.balanceOf(address).then(count => count.gt(0));
+    return contract.balanceOf(address).then(count => count.gt(0)).then(result => {
+        DEBUG("address", address, result);
+        return result;
+    });
 }
 
 app.post('/secure', async function (req, res) {
@@ -33,14 +36,14 @@ app.post('/secure', async function (req, res) {
         const valid     = await Promise.all(addresses.map(runCheck)).then(results => results.every(Boolean));
 
         if (!valid) {
-            DEBUG({ error: 'invalid ring entries' });
-            res.send({ error: 'invalid ring entries' });
+            DEBUG({ error: 'connection refused', details: 'invalid ring entries' });
+            res.send({ error: 'connection refused', details: 'invalid ring entries' });
             return;
         }
 
         if (!verify(message, sign)) {
-            DEBUG({ error: 'invalid signature' });
-            res.send({ error: 'invalid signature' });
+            DEBUG({ error: 'connection refused', details: 'invalid signature' });
+            res.send({ error: 'connection refused', details: 'invalid signature' });
             return;
         }
 
