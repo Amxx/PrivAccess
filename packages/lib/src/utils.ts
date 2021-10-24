@@ -1,10 +1,10 @@
-import { BigNumber           } from "@ethersproject/bignumber";
-import { keccak256           } from "@ethersproject/keccak256";
-import { SigningKey          } from '@ethersproject/signing-key';
-import { computeAddress      } from '@ethersproject/transactions';
-import { Wallet              } from '@ethersproject/wallet';
-import { ec                  } from 'elliptic';
-import { KeyPair, KeyPairish } from './types';
+import { arrayify, hexlify, concat } from "@ethersproject/bytes";
+import { keccak256                 } from "@ethersproject/keccak256";
+import { SigningKey                } from '@ethersproject/signing-key';
+import { computeAddress            } from '@ethersproject/transactions';
+import { Wallet                    } from '@ethersproject/wallet';
+import { ec                        } from 'elliptic';
+import { KeyPair, KeyPairish       } from './types';
 
 let _curve: ec = null
 
@@ -58,20 +58,32 @@ export function getKeyImage(keyPair: KeyPair) {
     return keyImage;
 }
 
-export function serialize(sign) {
-    return Buffer.from(JSON.stringify({
-        ring:   sign.ring.map(key => typeof key === 'string' ? key : keyFromPublicOrSigner(key).getPublic('hex')),
-        image:  sign.image.toJSON(),
-        value:  BigNumber.from(sign.value).toHexString(),
-        values: sign.values.map(bn => BigNumber.from(bn).toHexString()),
-    })).toString('base64');
+export function serialize({ image, value, values, ring }) {
+    const [ x , y ] = image.toJSON();
+
+    return hexlify(concat([].concat(
+        arrayify('0x' + x.toString(16)),
+        arrayify('0x' + y.toString(16)),
+        arrayify(value),
+        Array(ring.length).fill(null).flatMap((_, i) => [
+            arrayify(values[i]),
+            arrayify('0x' + keyFromPublicOrSigner(ring[i]).getPublic('hex')),
+        ]),
+    )));
 }
 
 export function deserialize(data) {
     try {
-        const sign = JSON.parse(Buffer.from(data, 'base64').toString());
-        sign.image = getCurve().g.curve.point(...sign.image);
-        return sign;
+        const buffer = arrayify(data);
+        const size   = (buffer.length - 0x60) / 0x61;
+        const x      = buffer.slice(0x00, 0x20);
+        const y      = buffer.slice(0x20, 0x40);
+        const value  = hexlify(buffer.slice(0x40, 0x60));
+        const values = Array(size).fill(null).map((_, i) => hexlify(buffer.slice(0x61 * i + 0x60, 0x61 * i + 0x80)));
+        const ring   = Array(size).fill(null).map((_, i) => hexlify(buffer.slice(0x61 * i + 0x80, 0x61 * i + 0xC1)));
+        const image  = getCurve().g.curve.point(x, y);
+
+        return { image, value, values, ring };
     } catch {
         throw new Error("invalid serialized signature");
     }
