@@ -3,7 +3,7 @@ import { Bytes, arrayify      } from "@ethersproject/bytes";
 import { hashMessage          } from "@ethersproject/hash";
 import { keccak256            } from "@ethersproject/keccak256";
 import { randomBytes,shuffled } from "@ethersproject/random";
-import { RingSign, KeyPairish } from './types';
+import { RingSign, KeyPairish } from './utils/types';
 import * as utils               from './utils';
 
 export function sign(message: Bytes | string, personal: KeyPairish, external: KeyPairish[]): RingSign {
@@ -32,11 +32,11 @@ export function sign(message: Bytes | string, personal: KeyPairish, external: Ke
     .forEach((_, step) => {
         const idx   = (offset + step) % ring.length;
 
-        const c_i = step && C[idx].toHexString().replace(/^0x/, '');
-        const s_i =         S[idx].toHexString().replace(/^0x/, '');
+        const c_i = step && utils.toBN(C[idx]);
+        const s_i =         utils.toBN(S[idx]);
 
         const point = step ? {
-            l: ring[idx].getPublic().mul(c_i).add(signer.ec.curve.g.mul(s_i)),
+            l: ring[idx].getPublic().mul(c_i).add(signer.ec.g.mul(s_i)),
             r: image.mul(c_i).add(utils.hashPoint(ring[idx]).mul(s_i)),
         } : {
             l: signer.ec.g.mul(s_i),
@@ -54,7 +54,7 @@ export function sign(message: Bytes | string, personal: KeyPairish, external: Ke
 
     let cs_mul_ks     = C[offset].mul(signer.getPrivate().toString());
     let u_sub_csmulks = cs_mul_ks.mul(-1).add(S[offset]);
-    S[offset]         = u_sub_csmulks.mod(signer.ec.curve.n.toString());
+    S[offset]         = u_sub_csmulks.mod(signer.ec.n.toString());
 
     return {
         image,

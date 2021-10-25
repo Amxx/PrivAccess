@@ -1,11 +1,3 @@
-import { sign   } from './sign';
-import { verify } from './verify';
-import * as utils from './utils';
-import * as TYPES from './types';
-
-export {
-    TYPES,
-    sign,
-    verify,
-    utils,
-}
+export { sign   } from './sign';
+export { verify } from './verify';
+export * as utils from './utils'

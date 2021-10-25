@@ -41,4 +41,13 @@ describe ('verify signature', () => {
             assert.isFalse(verify("not hello world", this.deserialized));
         });
     });
+
+    describe ('mass check', () => {
+        for (const i in new Array(32).fill()) {
+            it (`check #${i}`, async () => {
+                assert.isTrue(verify("hello world", utils.deserialize(utils.serialize(this.sig))));
+            });
+        }
+    });
+
 });
