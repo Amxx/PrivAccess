@@ -1,33 +1,37 @@
-import { arrayify, concat, hexlify, zeroPad } from "@ethersproject/bytes";
-import { getCurve, keyFromPublicOrSigner    } from './curve';
-import { RingSign                           } from './types';
+import * as secp                              from 'noble-secp256k1';
+import { zip                                } from 'zip-array';
+import { arrayify, concat, hexlify, zeroPad } from '@ethersproject/bytes';
+import { RingSig                            } from '../sign';
+import { Key                                } from './key';
 
-export function serialize({ image, value, values, ring }: RingSign): string {
-    const [ x , y ] = image.toJSON();
-
+export function serialize({ image, value, ring, seeds }: RingSig): string {
     return hexlify(concat([].concat(
-        zeroPad('0x' + x.toString(16), 32),
-        zeroPad('0x' + y.toString(16), 32),
-        zeroPad(hexlify(value),        32),
-        Array(ring.length).fill(null).flatMap((_, i) => [
-            zeroPad(hexlify(values[i]), 32),
-            zeroPad('0x' + keyFromPublicOrSigner(ring[i]).getPublic('hex'), 65),
-        ]),
+        zeroPad(image.toRawBytes(), 65),
+        zeroPad(hexlify(value),     32),
+        zip(
+            ring.map(k => zeroPad(Key.from(k).public, 65)),
+            seeds.map(s => zeroPad(hexlify(s), 32)),
+        ).flatMap(x => x),
     )));
 }
 
-export function deserialize(str: string): RingSign {
+export function deserialize(str: string): RingSig {
     try {
         const buffer = arrayify(str);
-        const size   = (buffer.length - 0x60) / 0x61;
-        const x      = buffer.slice(0x00, 0x20);
-        const y      = buffer.slice(0x20, 0x40);
-        const value   = hexlify(buffer.slice(0x40, 0x60));
-        const values  = Array(size).fill(null).map((_, i) => hexlify(buffer.slice(0x61 * i + 0x60, 0x61 * i + 0x80)));
-        const ring    = Array(size).fill(null).map((_, i) => hexlify(buffer.slice(0x61 * i + 0x80, 0x61 * i + 0xC1)));
-        const image   = getCurve().g.curve.point(x, y);
-        return { image, value, values, ring };
+        const [ header, ...blocks ] = Array(buffer.length / 0x61)
+        .fill(null)
+        .map((_, i) => ({
+            x: hexlify(buffer.slice(0x00 + i * 0x61, 0x41 + i * 0x61)),
+            y: BigInt(hexlify(buffer.slice(0x41 + i * 0x61, 0x61 + i * 0x61))),
+        }));
+
+        return {
+            image: secp.Point.fromHex(header.x.replace(/^0x/, '')),
+            value: header.y,
+            ring:  blocks.map(({ x }) => x),
+            seeds: blocks.map(({ y }) => y),
+        };
     } catch(error) {
-        throw new Error("invalid serialized signature: " + error);
+        throw new Error('invalid serialized signature: ' + error);
     }
 }

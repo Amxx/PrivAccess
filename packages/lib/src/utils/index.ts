@@ -1,4 +1,2 @@
-export * from './numbers';
-export * from './curve';
+export * from './key';
 export * from './serialization';
-export * from './types';
